@@ -16,10 +16,9 @@ export const UbicacionesTable = ({ data, onEdit, onDelete }) => (
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase">Almacén</th>
-              <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase">Pasillo</th>
-              <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase">Estante</th>
-              <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase">Nivel</th>
+              <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase">ID</th>
+              <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase">Nombre</th>
+              <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase">Tipo de Ubicación</th>
               <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase">Acciones</th>
             </tr>
           </thead>
@@ -27,16 +26,26 @@ export const UbicacionesTable = ({ data, onEdit, onDelete }) => (
             {data.map((item) => (
               <tr key={item.id} className="hover:bg-blue-50 transition-colors">
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <span className="text-sm font-medium text-gray-900">{item.almacen}</span>
+                  <span className="text-sm font-semibold text-gray-900">#{item.id}</span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <span className="text-sm text-gray-600">{item.pasillo}</span>
+                  <div className="flex items-center space-x-3">
+                    <div className="bg-blue-100 rounded-lg p-2">
+                      <MapPin size={18} className="text-blue-600" />
+                    </div>
+                    <span className="text-sm font-medium text-gray-900">{item.nombre}</span>
+                  </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <span className="text-sm text-gray-600">{item.estante}</span>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span className="text-sm text-gray-600">{item.nivel}</span>
+                  <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
+                    item.tipoUbicacion === 'MainAlmacen' 
+                      ? 'bg-purple-100 text-purple-800' 
+                      : item.tipoUbicacion === 'Recepcion'
+                      ? 'bg-green-100 text-green-800'
+                      : 'bg-gray-100 text-gray-800'
+                  }`}>
+                    {item.tipoUbicacion}
+                  </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm space-x-3">
                   <button 

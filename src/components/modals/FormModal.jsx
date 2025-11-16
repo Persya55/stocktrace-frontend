@@ -8,6 +8,7 @@ export const FormModal = ({ type, item, onClose, onSave }) => {
     if (item) return item;
     if (type === 'productos') return { tipoProducto: 'COMESTIBLE' };
     if (type === 'contenedores') return { estatus: 'Vacio' };
+    if (type === 'ubicaciones') return { tipoUbicacion: 'MainAlmacen' };
     return {};
   };
   
@@ -39,6 +40,11 @@ export const FormModal = ({ type, item, onClose, onSave }) => {
           ...formData,
           estatus: formData.estatus || 'Vacio',
           ubicacionId: parseInt(formData.ubicacionId) || null
+        };
+      } else if (type === 'ubicaciones') {
+        dataToSend = {
+          ...formData,
+          tipoUbicacion: formData.tipoUbicacion || 'MainAlmacen'
         };
       }
       
@@ -204,32 +210,34 @@ export const FormModal = ({ type, item, onClose, onSave }) => {
         <>
           <input
             type="text"
-            placeholder="Almacén"
-            value={formData.almacen || ''}
-            onChange={(e) => setFormData({...formData, almacen: e.target.value})}
+            placeholder="Nombre de la ubicación (ej: Almacén Principal)"
+            value={formData.nombre || ''}
+            onChange={(e) => setFormData({...formData, nombre: e.target.value})}
             className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
           />
-          <input
-            type="text"
-            placeholder="Pasillo"
-            value={formData.pasillo || ''}
-            onChange={(e) => setFormData({...formData, pasillo: e.target.value})}
+          <select
+            value={formData.tipoUbicacion || 'MainAlmacen'}
+            onChange={(e) => setFormData({...formData, tipoUbicacion: e.target.value})}
             className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-          />
-          <input
-            type="text"
-            placeholder="Estante"
-            value={formData.estante || ''}
-            onChange={(e) => setFormData({...formData, estante: e.target.value})}
-            className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-          />
-          <input
-            type="text"
-            placeholder="Nivel"
-            value={formData.nivel || ''}
-            onChange={(e) => setFormData({...formData, nivel: e.target.value})}
-            className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-          />
+          >
+            <option value="MainAlmacen">Almacén Principal</option>
+            <option value="Recepcion">Recepción</option>
+            <option value="Despacho">Despacho</option>
+            <option value="Cuarentena">Cuarentena</option>
+            <option value="Devolucion">Devolución</option>
+          </select>
+          <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-lg">
+            <p className="text-sm text-blue-700">
+              <strong>Tipos de ubicación:</strong>
+            </p>
+            <ul className="text-xs text-blue-600 mt-2 space-y-1 ml-4">
+              <li>• <strong>MainAlmacen:</strong> Ubicación principal de almacenamiento</li>
+              <li>• <strong>Recepcion:</strong> Área de recepción de productos</li>
+              <li>• <strong>Despacho:</strong> Área de preparación de envíos</li>
+              <li>• <strong>Cuarentena:</strong> Área de productos en revisión</li>
+              <li>• <strong>Devolucion:</strong> Área de productos devueltos</li>
+            </ul>
+          </div>
         </>
       );
     }
