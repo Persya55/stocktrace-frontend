@@ -17,7 +17,7 @@ export const ProveedoresTable = ({ data, onEdit, onDelete }) => (
           <thead className="bg-gray-50">
             <tr>
               <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase">Nombre</th>
-              <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase">Contacto</th>
+              <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase">Ruc</th>
               <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase">Teléfono</th>
               <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase">Email</th>
               <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase">Acciones</th>
@@ -30,7 +30,7 @@ export const ProveedoresTable = ({ data, onEdit, onDelete }) => (
                   <span className="text-sm font-medium text-gray-900">{item.nombre}</span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <span className="text-sm text-gray-600">{item.contacto}</span>
+                  <span className="text-sm text-gray-600">{item.ruc}</span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span className="text-sm text-gray-600">{item.telefono}</span>
