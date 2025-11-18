@@ -12,6 +12,9 @@ import OrdenesTable from './components/tables/OrdenesTable';
 import FormModal from './components/modals/FormModal';
 import LoteStockTable from './components/tables/LoteStockTable';
 
+import { RecepcionModal } from './components/modals/RecepcionModal';
+
+
 import { TABS } from './constants/tabs';
 import { api } from './services/api';
 
@@ -22,6 +25,10 @@ function App() {
   const [error, setError] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
+
+//Factorizando
+const [showRecepcionModal, setShowRecepcionModal] = useState(false);
+const [ordenARecibir, setOrdenARecibir] = useState(null);
 
 const fetchData = useCallback(async () => {
     setLoading(true);
@@ -77,6 +84,22 @@ const fetchData = useCallback(async () => {
     fetchData();
   };
 
+  const handleOpenRecepcionModal = (orden) => {
+    setOrdenARecibir(orden);
+    setShowRecepcionModal(true);
+  };
+
+  const handleCloseRecepcionModal = () => {
+    setShowRecepcionModal(false);
+    setOrdenARecibir(null);
+  };
+
+  const handleSaveRecepcion = () => {
+    // (Esto actualizará la tabla de Órdenes Y la de Inventario)
+    setShowRecepcionModal(false);
+    setOrdenARecibir(null);
+    fetchData();
+  };
   const renderTable = () => {
     switch(activeTab) {
       case 'productos':
@@ -90,7 +113,7 @@ const fetchData = useCallback(async () => {
       case 'lotes-stock':
         return <LoteStockTable data={data} />;      
       case 'ordenes-compra':
-        return <OrdenesTable data={data} />;
+        return <OrdenesTable data={data} onRecibir={handleOpenRecepcionModal} />;
       default:
         return null;
     }
@@ -135,6 +158,15 @@ const fetchData = useCallback(async () => {
           onSave={handleSave}
         />
       )}
+
+      {showRecepcionModal && (  
+       < RecepcionModal 
+          orden={ordenARecibir}  
+          onClose={handleCloseRecepcionModal}  
+          onSave={handleSaveRecepcion}
+      />      
+      )}
+      
     </div>
   );
 }

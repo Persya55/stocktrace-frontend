@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { ShoppingCart, Eye, Package, Calendar, User, TrendingUp, ChevronDown, ChevronUp } from 'lucide-react';
+import { ShoppingCart, Eye, Package, Calendar, User, TrendingUp, ChevronDown, ChevronUp, Truck } from 'lucide-react';
 
-export const OrdenesTable = ({ data }) => {
+export const OrdenesTable = ({ data, onRecibir }) => {
   const [expandedOrder, setExpandedOrder] = useState(null);
 
   const getStatusBadgeColor = (estatus) => {
@@ -50,6 +50,7 @@ export const OrdenesTable = ({ data }) => {
                 <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase">Estado</th>
                 <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase">Productos</th>
                 <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase">Detalles</th>
+                <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase">Acciones</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -102,12 +103,22 @@ export const OrdenesTable = ({ data }) => {
                         {expandedOrder === orden.id ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                       </button>
                     </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                <button
+                  onClick={() => onRecibir(orden)}
+                  disabled={orden.estatus?.toLowerCase() === 'recibida'} // Deshabilitar si ya se recibió
+                  className="flex items-center space-x-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-all shadow-md hover:shadow-lg text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Truck size={16} />
+                  <span>Recibir</span>
+                </button>
+              </td>
                   </tr>
                   
                   {/* Fila expandible con detalles */}
                   {expandedOrder === orden.id && orden.detalles && orden.detalles.length > 0 && (
                     <tr>
-                      <td colSpan="6" className="px-6 py-4 bg-gray-50">
+                      <td colSpan="7" className="px-6 py-4 bg-gray-50">
                         <div className="space-y-3">
                           <div className="flex items-center space-x-2 mb-3">
                             <TrendingUp size={18} className="text-blue-600" />
@@ -120,8 +131,8 @@ export const OrdenesTable = ({ data }) => {
                                   <th className="px-4 py-2 text-left text-xs font-semibold text-gray-600">Producto</th>
                                   <th className="px-4 py-2 text-left text-xs font-semibold text-gray-600">SKU</th>
                                   <th className="px-4 py-2 text-left text-xs font-semibold text-gray-600">Cantidad</th>
-                                  <th className="px-4 py-2 text-left text-xs font-semibold text-gray-600">Precio Unit.</th>
-                                  <th className="px-4 py-2 text-left text-xs font-semibold text-gray-600">Subtotal</th>
+                                  {/* <th className="px-4 py-2 text-left text-xs font-semibold text-gray-600">Precio Unit.</th>
+                                  <th className="px-4 py-2 text-left text-xs font-semibold text-gray-600">Subtotal</th> */}
                                 </tr>
                               </thead>
                               <tbody className="divide-y divide-gray-200">
@@ -130,14 +141,14 @@ export const OrdenesTable = ({ data }) => {
                                     <td className="px-4 py-3 text-sm text-gray-900">{detalle.nombreProducto || 'N/A'}</td>
                                     <td className="px-4 py-3 text-sm text-gray-600">{detalle.skuProducto || 'N/A'}</td>
                                     <td className="px-4 py-3 text-sm font-medium text-gray-900">{detalle.cantidad || 0}</td>
-                                    <td className="px-4 py-3 text-sm text-gray-600">
+                                    {/* <td className="px-4 py-3 text-sm text-gray-600">
                                       {detalle.precioUnitario ? `$${detalle.precioUnitario.toFixed(2)}` : 'N/A'}
                                     </td>
                                     <td className="px-4 py-3 text-sm font-semibold text-gray-900">
                                       {detalle.precioUnitario && detalle.cantidad 
                                         ? `$${(detalle.precioUnitario * detalle.cantidad).toFixed(2)}` 
                                         : 'N/A'}
-                                    </td>
+                                    </td> */}
                                   </tr>
                                 ))}
                               </tbody>
