@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Check, AlertCircle } from 'lucide-react';
 
-const API_BASE_URL = 'http://localhost:8080';
+import { api } from '/src/services/api.js';
+
 
 export const FormModal = ({ type, item, onClose, onSave }) => {
   const getInitialFormData = () => {
@@ -15,17 +16,33 @@ export const FormModal = ({ type, item, onClose, onSave }) => {
   const [formData, setFormData] = useState(getInitialFormData());
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  //Factorizando
+  const [ubicaciones, setUbicaciones] = useState([]);
 
-  const handleSubmit = async () => {
+  useEffect(() => {
+    if (type === 'contenedores') {
+      const cargarUbicaciones = async () => {
+        try {
+          // Usamos nuestro 'api' centralizado
+          const data = await api.fetchData('ubicaciones'); 
+          setUbicaciones(data);
+        } catch (err) {
+          setError("Error al cargar lista de ubicaciones: " + err.message);
+        }
+      };
+      cargarUbicaciones();
+    }
+  }, [type]);
+  
+
+const handleSubmit = async () => {
     setLoading(true);
     setError(null);
 
     try {
-      let url = '';
-      let method = item ? 'PUT' : 'POST';
       let dataToSend = {...formData};
       
-      // Preparar datos según el tipo
+      // Preparar datos según el tipo (Esta lógica sigue igual por ahora)
       if (type === 'productos') {
         dataToSend = {
           ...formData,
@@ -33,7 +50,8 @@ export const FormModal = ({ type, item, onClose, onSave }) => {
           largo: parseFloat(formData.largo) || 0,
           ancho: parseFloat(formData.ancho) || 0,
           volumen: parseFloat(formData.volumen) || 0,
-          tiempoVidaUtilBase: parseInt(formData.tiempoVidaUtilBase) || 0
+          tiempoVidaUtilBase: parseInt(formData.tiempoVidaUtilBase) || 0,
+          // (Añadiremos periodoGarantia en la Fase 0.2)
         };
       } else if (type === 'contenedores') {
         dataToSend = {
@@ -46,33 +64,23 @@ export const FormModal = ({ type, item, onClose, onSave }) => {
           ...formData,
           tipoUbicacion: formData.tipoUbicacion || 'MainAlmacen'
         };
-      }
-      
-      // Determinar URL
-      switch(type) {
-        case 'productos':
-          url = item ? `${API_BASE_URL}/productos/${item.id}` : `${API_BASE_URL}/productos`;
-          break;
-        case 'proveedores':
-          url = item ? `${API_BASE_URL}/proveedores/${item.id}` : `${API_BASE_URL}/proveedores`;
-          break;
-        case 'contenedores':
-          url = item ? `${API_BASE_URL}/contenedores/${item.id}` : `${API_BASE_URL}/contenedores`;
-          break;
-        case 'ubicaciones':
-          url = item ? `${API_BASE_URL}/ubicaciones/${item.id}` : `${API_BASE_URL}/ubicaciones`;
-          break;
+      } else if (type === 'proveedores') {
+        // (Añadiremos la lógica de 'ruc' en la Fase 0.2)
       }
 
-      const response = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(dataToSend)
-      });
-
-      if (!response.ok) throw new Error('Error al guardar');
+      // --- ¡AQUÍ ESTÁ LA NUEVA LÓGICA SIMPLIFICADA! ---
+      // Ya no necesitamos el 'switch' ni 'fetch'
       
-      onSave();
+      if (item) {
+        // Si 'item' existe, es una ACTUALIZACIÓN (PUT)
+        // Usamos el 'type' (ej: "productos") como el endpoint
+        await api.update(type, item.id, dataToSend);
+      } else {
+        // Si no, es CREACIÓN (POST)
+        await api.create(type, dataToSend);
+      }
+      
+      onSave(); // Llama a onSave (que refresca la data)
     } catch (err) {
       setError(err.message);
     } finally {
@@ -99,43 +107,56 @@ export const FormModal = ({ type, item, onClose, onSave }) => {
             className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
           />
           <select
-            value={formData.tipoProducto || 'COMESTIBLE'}
-            onChange={(e) => setFormData({...formData, tipoProducto: e.target.value})}
-            className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-          >
-            <option value="COMESTIBLE">Comestible</option>
-            <option value="NO_COMESTIBLE">No Comestible</option>
-          </select>
+              value={formData.tipoProducto || 'COMESTIBLE'}
+              onChange={(e) => setFormData({...formData, tipoProducto: e.target.value})}
+              className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+           >
+             <option value="COMESTIBLE">Comestible</option>
+             <option value="DURADERO">Duradero</option> 
+           </select>
+
           <div className="grid grid-cols-3 gap-3">
             <input
               type="number"
-              placeholder="Largo"
+              placeholder="Largo cm"
               value={formData.largo || ''}
               onChange={(e) => setFormData({...formData, largo: e.target.value})}
               className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
             />
             <input
               type="number"
-              placeholder="Ancho"
+              placeholder="Ancho cm"
               value={formData.ancho || ''}
               onChange={(e) => setFormData({...formData, ancho: e.target.value})}
               className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
             />
             <input
               type="number"
-              placeholder="Volumen"
+              placeholder="Volumen cm "
               value={formData.volumen || ''}
               onChange={(e) => setFormData({...formData, volumen: e.target.value})}
               className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
             />
           </div>
-          <input
-            type="number"
-            placeholder="Tiempo de vida útil (días)"
-            value={formData.tiempoVidaUtilBase || ''}
-            onChange={(e) => setFormData({...formData, tiempoVidaUtilBase: e.target.value})}
-            className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-          />
+
+          
+          {formData.tipoProducto === 'DURADERO' ? (
+            <input
+              type="number"
+              placeholder="Período de Garantía (meses)"
+              value={formData.periodoGarantia || ''}
+              onChange={(e) => setFormData({...formData, periodoGarantia: e.target.value})}
+              className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+            />
+          ) : (
+            <input
+              type="number"
+              placeholder="Tiempo de vida útil (días)"
+              value={formData.tiempoVidaUtilBase || ''}
+              onChange={(e) => setFormData({...formData, tiempoVidaUtilBase: e.target.value})}
+              className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+            />
+          )}
         </>
       );
     } else if (type === 'proveedores') {
@@ -149,12 +170,13 @@ export const FormModal = ({ type, item, onClose, onSave }) => {
             className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
           />
           <input
-            type="text"
-            placeholder="Contacto"
-            value={formData.contacto || ''}
-            onChange={(e) => setFormData({...formData, contacto: e.target.value})}
-            className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+          type="text"
+          placeholder="RUC"
+          value={formData.ruc || ''}
+          onChange={(e) => setFormData({...formData, ruc: e.target.value})}
+          className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
           />
+
           <input
             type="tel"
             placeholder="Teléfono"
@@ -196,13 +218,18 @@ export const FormModal = ({ type, item, onClose, onSave }) => {
             <option value="Vacio">Vacío</option>
             <option value="Ocupado">Ocupado</option>
           </select>
-          <input
-            type="number"
-            placeholder="ID de Ubicación"
+          <select
             value={formData.ubicacionId || ''}
             onChange={(e) => setFormData({...formData, ubicacionId: e.target.value})}
             className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-          />
+            >
+            <option value="" disabled>-- Seleccione una ubicación --</option>
+            {ubicaciones.map(u => (
+              <option key={u.id} value={u.id}>
+                {u.nombre} (ID: {u.id})
+              </option>
+            ))}
+          </select>
         </>
       );
     } else if (type === 'ubicaciones') {
