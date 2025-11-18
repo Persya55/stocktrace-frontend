@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Plus } from 'lucide-react';
 import Header from './components/layout/Header';
 import Tabs from './components/layout/Tabs';
@@ -23,22 +23,27 @@ function App() {
   const [showModal, setShowModal] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
 
-  useEffect(() => {
-    fetchData();
-  }, [activeTab]);
-
-  const fetchData = async () => {
+const fetchData = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const result = await api.fetchData(activeTab);
+      // (Esta es la corrección del 'id' de la pestaña)
+      const endpoint = activeTab === 'ordenes' ? 'ordenes-compra' : activeTab;
+      const result = await api.fetchData(endpoint);
       setData(result);
     } catch (err) {
       setError(err.message);
     } finally {
       setLoading(false);
     }
-  };
+  }, [activeTab]);
+
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+
 
   const handleDelete = async (id) => {
     if (!confirm('¿Estás seguro de eliminar este elemento?')) return;
@@ -84,7 +89,7 @@ function App() {
         return <UbicacionesTable data={data} onEdit={handleEdit} onDelete={handleDelete} />;
       case 'lotes-stock':
         return <LoteStockTable data={data} />;      
-        case 'ordenes':
+      case 'ordenes-compra':
         return <OrdenesTable data={data} />;
       default:
         return null;
@@ -99,7 +104,7 @@ function App() {
       <main className="max-w-7xl mx-auto px-4 py-6">
         {error && <ErrorAlert error={error} />}
 
-        {activeTab !== 'ordenes' && activeTab !== 'lotes-stock' && (
+        {activeTab !== 'lotes-stock' && (
           <div className="mb-6 flex justify-between items-center">
             <div>
               <h2 className="text-2xl font-bold text-gray-900">
