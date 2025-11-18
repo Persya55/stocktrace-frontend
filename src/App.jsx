@@ -10,6 +10,8 @@ import ContenedoresTable from './components/tables/ContenedoresTable';
 import UbicacionesTable from './components/tables/UbicacionesTable';
 import OrdenesTable from './components/tables/OrdenesTable';
 import FormModal from './components/modals/FormModal';
+import LoteStockTable from './components/tables/LoteStockTable';
+
 import { TABS } from './constants/tabs';
 import { api } from './services/api';
 
@@ -80,7 +82,9 @@ function App() {
         return <ContenedoresTable data={data} onEdit={handleEdit} onDelete={handleDelete} />;
       case 'ubicaciones':
         return <UbicacionesTable data={data} onEdit={handleEdit} onDelete={handleDelete} />;
-      case 'ordenes':
+      case 'lotes-stock':
+        return <LoteStockTable data={data} />;      
+        case 'ordenes':
         return <OrdenesTable data={data} />;
       default:
         return null;
@@ -95,7 +99,7 @@ function App() {
       <main className="max-w-7xl mx-auto px-4 py-6">
         {error && <ErrorAlert error={error} />}
 
-        {activeTab !== 'ordenes' && (
+        {activeTab !== 'ordenes' && activeTab !== 'lotes-stock' && (
           <div className="mb-6 flex justify-between items-center">
             <div>
               <h2 className="text-2xl font-bold text-gray-900">
