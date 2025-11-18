@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Check, AlertCircle } from 'lucide-react';
+import { X, Check, AlertCircle, Trash2 } from 'lucide-react';
 
 import { api } from '/src/services/api.js';
 
@@ -10,6 +10,7 @@ export const FormModal = ({ type, item, onClose, onSave }) => {
     if (type === 'productos') return { tipoProducto: 'COMESTIBLE' };
     if (type === 'contenedores') return { estatus: 'Vacio' };
     if (type === 'ubicaciones') return { tipoUbicacion: 'MainAlmacen' };
+    if (type === 'ordenes-compra') return { proveedorId: '', detalles: [{ productoId: '', cantidadSolicitada: 1 }] };
     return {};
   };
   
@@ -18,24 +19,55 @@ export const FormModal = ({ type, item, onClose, onSave }) => {
   const [error, setError] = useState(null);
   //Factorizando
   const [ubicaciones, setUbicaciones] = useState([]);
+  const [proveedores, setProveedores] = useState([]);
+  const [productos, setProductos] = useState([]);
 
-  useEffect(() => {
+
+useEffect(() => {
+  const cargarDatos = async () => {
+   try {
     if (type === 'contenedores') {
-      const cargarUbicaciones = async () => {
-        try {
-          // Usamos nuestro 'api' centralizado
-          const data = await api.fetchData('ubicaciones'); 
-          setUbicaciones(data);
-        } catch (err) {
-          setError("Error al cargar lista de ubicaciones: " + err.message);
-        }
-      };
-      cargarUbicaciones();
+     const data = await api.fetchData('ubicaciones');
+     setUbicaciones(data);
     }
-  }, [type]);
-  
+    if (type === 'ordenes-compra') {
+          setLoading(true); 
+     const [provData, prodData] = await Promise.all([
+      api.fetchData('proveedores'),
+      api.fetchData('productos')
+     ]);
+     setProveedores(provData);
+     setProductos(prodData);
+          setLoading(false);
+    }
+   } catch (err) {
+    setLoading(false);
+    setError("Error al cargar datos necesarios: " + err.message);
+   }
+  };
+  cargarDatos();
+ }, [type]);
 
-const handleSubmit = async () => {
+ //Código para Ordendes de Compra
+ const handleDetalleChange = (index, field, value) => {
+  const nuevosDetalles = [...formData.detalles];
+  nuevosDetalles[index][field] = value;
+  setFormData({ ...formData, detalles: nuevosDetalles });
+};
+
+const addDetalleRow = () => {
+  setFormData({
+    ...formData,
+    detalles: [...formData.detalles, { productoId: '', cantidadSolicitada: 1 }]
+  });
+};
+
+const removeDetalleRow = (index) => {
+  const nuevosDetalles = formData.detalles.filter((_, i) => i !== index);
+  setFormData({ ...formData, detalles: nuevosDetalles });
+};
+
+    const handleSubmit = async () => {
     setLoading(true);
     setError(null);
 
@@ -67,10 +99,15 @@ const handleSubmit = async () => {
       } else if (type === 'proveedores') {
         // (Añadiremos la lógica de 'ruc' en la Fase 0.2)
       }
-
-      // --- ¡AQUÍ ESTÁ LA NUEVA LÓGICA SIMPLIFICADA! ---
-      // Ya no necesitamos el 'switch' ni 'fetch'
-      
+      else if (type === 'ordenes-compra') {
+      dataToSend = {
+        proveedorId: parseInt(formData.proveedorId),
+        detalles: formData.detalles.map(d => ({
+          productoId: parseInt(d.productoId),
+          cantidadSolicitada: parseInt(d.cantidadSolicitada)
+         }))
+        };
+      }
       if (item) {
         // Si 'item' existe, es una ACTUALIZACIÓN (PUT)
         // Usamos el 'type' (ej: "productos") como el endpoint
@@ -268,60 +305,127 @@ const handleSubmit = async () => {
         </>
       );
     }
+    else if (type === 'ordenes-compra') {
+      return (
+        <>
+          <label className="block text-sm font-medium text-gray-700">Proveedor</label>
+          <select
+            value={formData.proveedorId || ''}
+            onChange={(e) => setFormData({ ...formData, proveedorId: e.target.value })}
+            className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          >
+            <option value="" disabled>-- Seleccione un Proveedor --</option>
+            {proveedores.map(p => (
+              <option key={p.id} value={p.id}>{p.nombre}</option>
+            ))}
+          </select>
+
+          {/* --- Lista Dinámica de Detalles --- */}
+          <label className="block text-sm font-medium text-gray-700 mt-4">Productos</label>
+          <div className="space-y-3">
+            {formData.detalles.map((detalle, index) => (
+              <div key={index} className="flex items-center space-x-2 p-3 bg-gray-50 rounded-lg border">
+                <div className="flex-1">
+                  <select
+                    value={detalle.productoId}
+                    onChange={(e) => handleDetalleChange(index, 'productoId', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  >
+                    <option value="" disabled>-- Producto --</option>
+                    {productos.map(p => (
+                      <option key={p.id} value={p.id}>{p.nombre} (SKU: {p.sku})</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="w-24">
+                  <input
+                    type="number"
+                    placeholder="Cant."
+                    min="1"
+                    value={detalle.cantidadSolicitada}
+                    onChange={(e) => handleDetalleChange(index, 'cantidadSolicitada', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => removeDetalleRow(index)}
+                  className="text-red-500 hover:text-red-700 p-2"
+                  disabled={formData.detalles.length <= 1} // No dejar borrar la última fila
+                >
+                  <Trash2 size={18} />
+                </button>
+              </div>
+            ))}
+          </div>
+
+          <button
+            type="button"
+            onClick={addDetalleRow}
+            className="mt-3 text-sm font-medium text-blue-600 hover:text-blue-800"
+          >
+            + Agregar otro producto
+          </button>
+        </>
+      );
+    }
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
-        <div className="p-6">
-          <div className="flex justify-between items-center mb-6">
-            <h3 className="text-2xl font-bold text-gray-900">
-              {item ? 'Editar' : 'Agregar'} {type.charAt(0).toUpperCase() + type.slice(1)}
-            </h3>
-            <button 
-              onClick={onClose} 
-              className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 p-2 rounded-full transition-all"
-            >
-              <X size={24} />
-            </button>
-          </div>
+  <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
+   <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] flex flex-col">
+    <div className="p-6 pb-4 flex-shrink-0 border-b border-gray-200">
+     <div className="flex justify-between items-center">
+      <h3 className="text-2xl font-bold text-gray-900">
+       {item ? 'Editar' : 'Agregar'} {type.charAt(0).toUpperCase() + type.slice(1).replace('-', ' ')}
+      </h3>
+      <button 
+       onClick={onClose} 
+       className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 p-2 rounded-full transition-all"
+      >
+       <X size={24} />
+      </button>
+     </div>
+    </div>
+      <div className="overflow-y-auto flex-grow p-6">
+     {error && (
+      <div className="mb-4 bg-red-50 border-l-4 border-red-500 rounded-r-lg p-4 flex items-start space-x-3">
+       <AlertCircle className="text-red-500 flex-shrink-0 mt-0.5" size={20} />
+       <p className="text-sm text-red-700">{error}</p>
+      </div>
+     )}
 
-          {error && (
-            <div className="mb-4 bg-red-50 border-l-4 border-red-500 rounded-r-lg p-4 flex items-start space-x-3">
-              <AlertCircle className="text-red-500 flex-shrink-0 mt-0.5" size={20} />
-              <p className="text-sm text-red-700">{error}</p>
-            </div>
-          )}
-
-          <div className="space-y-4">
-            {renderFields()}
-            
-            <div className="flex space-x-3 pt-6">
-              <button
-                onClick={onClose}
-                className="flex-1 px-4 py-3 border-2 border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-all"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={handleSubmit}
-                disabled={loading}
-                className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 shadow-md hover:shadow-lg"
-              >
-                {loading ? (
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                ) : (
-                  <>
-                    <Check size={20} />
-                    <span>Guardar</span>
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
+     <div className="space-y-4">
+      {renderFields()}
+     </div>
         </div>
+        <div className="p-6 pt-4 flex-shrink-0 border-t border-gray-200 bg-gray-50 rounded-b-2xl">
+      <div className="flex space-x-3">
+       <button
+        onClick={onClose}
+        className="flex-1 px-4 py-3 border-2 border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-all"
+       >
+        Cancelar
+       </button>
+       <button
+        onClick={handleSubmit}
+        disabled={loading}
+        className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 shadow-md hover:shadow-lg"
+       >
+        {loading ? (
+         <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+        ) : (
+         <>
+          <Check size={20} />
+          <span>Guardar</span>
+         </>
+        )}
+       </button>
       </div>
     </div>
+
+   </div>
+  </div>
   );
 };
 

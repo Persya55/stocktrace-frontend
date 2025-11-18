@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Plus } from 'lucide-react';
 import Header from './components/layout/Header';
 import Tabs from './components/layout/Tabs';
@@ -12,6 +12,9 @@ import OrdenesTable from './components/tables/OrdenesTable';
 import FormModal from './components/modals/FormModal';
 import LoteStockTable from './components/tables/LoteStockTable';
 
+import { RecepcionModal } from './components/modals/RecepcionModal';
+import { SalidaView } from './components/tables/SalidaView';
+
 import { TABS } from './constants/tabs';
 import { api } from './services/api';
 
@@ -23,22 +26,38 @@ function App() {
   const [showModal, setShowModal] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
 
-  useEffect(() => {
-    fetchData();
-  }, [activeTab]);
+//Factorizando
+const [showRecepcionModal, setShowRecepcionModal] = useState(false);
+const [ordenARecibir, setOrdenARecibir] = useState(null);
 
-  const fetchData = async () => {
+const fetchData = useCallback(async () => {
     setLoading(true);
     setError(null);
+
+    if (activeTab === 'salidas') {
+      setData([]);
+      setLoading(false);
+      return; 
+    }
+
     try {
-      const result = await api.fetchData(activeTab);
+      // (Esta es la corrección del 'id' de la pestaña)
+      const endpoint = activeTab === 'ordenes-compra' ? 'ordenes-compra' : activeTab;
+      const result = await api.fetchData(endpoint);
       setData(result);
     } catch (err) {
       setError(err.message);
     } finally {
       setLoading(false);
     }
-  };
+  }, [activeTab]);
+
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+
 
   const handleDelete = async (id) => {
     if (!confirm('¿Estás seguro de eliminar este elemento?')) return;
@@ -72,6 +91,22 @@ function App() {
     fetchData();
   };
 
+  const handleOpenRecepcionModal = (orden) => {
+    setOrdenARecibir(orden);
+    setShowRecepcionModal(true);
+  };
+
+  const handleCloseRecepcionModal = () => {
+    setShowRecepcionModal(false);
+    setOrdenARecibir(null);
+  };
+
+  const handleSaveRecepcion = () => {
+    // (Esto actualizará la tabla de Órdenes Y la de Inventario)
+    setShowRecepcionModal(false);
+    setOrdenARecibir(null);
+    fetchData();
+  };
   const renderTable = () => {
     switch(activeTab) {
       case 'productos':
@@ -84,8 +119,10 @@ function App() {
         return <UbicacionesTable data={data} onEdit={handleEdit} onDelete={handleDelete} />;
       case 'lotes-stock':
         return <LoteStockTable data={data} />;      
-        case 'ordenes':
-        return <OrdenesTable data={data} />;
+      case 'ordenes-compra':
+        return <OrdenesTable data={data} onRecibir={handleOpenRecepcionModal} />;
+      case 'salidas':
+      return <SalidaView />;
       default:
         return null;
     }
@@ -99,7 +136,7 @@ function App() {
       <main className="max-w-7xl mx-auto px-4 py-6">
         {error && <ErrorAlert error={error} />}
 
-        {activeTab !== 'ordenes' && activeTab !== 'lotes-stock' && (
+        {activeTab !== 'lotes-stock' && activeTab !== 'salidas' && (
           <div className="mb-6 flex justify-between items-center">
             <div>
               <h2 className="text-2xl font-bold text-gray-900">
@@ -130,6 +167,15 @@ function App() {
           onSave={handleSave}
         />
       )}
+
+      {showRecepcionModal && (  
+       < RecepcionModal 
+          orden={ordenARecibir}  
+          onClose={handleCloseRecepcionModal}  
+          onSave={handleSaveRecepcion}
+      />      
+      )}
+
     </div>
   );
 }

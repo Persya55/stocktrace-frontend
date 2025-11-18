@@ -43,7 +43,7 @@ const isNearExpiry = (dateString) => {
        <tr key={item.loteId} className="hover:bg-blue-50 transition-colors">
         <td className="px-6 py-4 whitespace-nowrap">
        <div className="text-sm font-semibold text-gray-900">{item.productoNombre}</div>
-                    <div className="text-xs text-gray-500">SKU: {item.sku}</div>
+        <div className="text-xs text-gray-500">SKU: {item.sku}</div>
         </td>
         <td className="px-6 py-4 whitespace-nowrap">
        <span className="text-sm font-medium text-gray-800">{item.numeroLote}</span>
