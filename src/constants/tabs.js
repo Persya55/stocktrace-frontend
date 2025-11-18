@@ -1,4 +1,4 @@
-import { Package, Users, Box, MapPin, ShoppingCart, ClipboardList } from 'lucide-react';
+import { Package, Users, Box, MapPin, ShoppingCart, ClipboardList, LogOut } from 'lucide-react';
 
 export const TABS = [
   { id: 'productos', label: 'Productos', icon: Package },
@@ -7,7 +7,7 @@ export const TABS = [
   { id: 'ubicaciones', label: 'Ubicaciones', icon: MapPin },
   { id: 'ordenes-compra', label: 'Órdenes de Compra', icon: ShoppingCart },
   { id: 'lotes-stock', label: 'Inventario', icon: ClipboardList },
-
+  { id: 'salidas', label: 'Salida de Mercancía', icon: LogOut },
 ];
 
 export default TABS;

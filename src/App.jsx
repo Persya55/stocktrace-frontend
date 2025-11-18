@@ -13,7 +13,7 @@ import FormModal from './components/modals/FormModal';
 import LoteStockTable from './components/tables/LoteStockTable';
 
 import { RecepcionModal } from './components/modals/RecepcionModal';
-
+import { SalidaView } from './components/tables/SalidaView';
 
 import { TABS } from './constants/tabs';
 import { api } from './services/api';
@@ -33,9 +33,16 @@ const [ordenARecibir, setOrdenARecibir] = useState(null);
 const fetchData = useCallback(async () => {
     setLoading(true);
     setError(null);
+
+    if (activeTab === 'salidas') {
+      setData([]);
+      setLoading(false);
+      return; 
+    }
+
     try {
       // (Esta es la corrección del 'id' de la pestaña)
-      const endpoint = activeTab === 'ordenes' ? 'ordenes-compra' : activeTab;
+      const endpoint = activeTab === 'ordenes-compra' ? 'ordenes-compra' : activeTab;
       const result = await api.fetchData(endpoint);
       setData(result);
     } catch (err) {
@@ -114,6 +121,8 @@ const fetchData = useCallback(async () => {
         return <LoteStockTable data={data} />;      
       case 'ordenes-compra':
         return <OrdenesTable data={data} onRecibir={handleOpenRecepcionModal} />;
+      case 'salidas':
+      return <SalidaView />;
       default:
         return null;
     }
@@ -127,7 +136,7 @@ const fetchData = useCallback(async () => {
       <main className="max-w-7xl mx-auto px-4 py-6">
         {error && <ErrorAlert error={error} />}
 
-        {activeTab !== 'lotes-stock' && (
+        {activeTab !== 'lotes-stock' && activeTab !== 'salidas' && (
           <div className="mb-6 flex justify-between items-center">
             <div>
               <h2 className="text-2xl font-bold text-gray-900">
@@ -166,7 +175,7 @@ const fetchData = useCallback(async () => {
           onSave={handleSaveRecepcion}
       />      
       )}
-      
+
     </div>
   );
 }
