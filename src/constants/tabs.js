@@ -1,13 +1,12 @@
-import { Package, Users, Box, MapPin, ShoppingCart, ClipboardList, LogOut } from 'lucide-react';
+import { Package, Users, Box, MapPin, ShoppingCart } from 'lucide-react';
 
 export const TABS = [
   { id: 'productos', label: 'Productos', icon: Package },
   { id: 'proveedores', label: 'Proveedores', icon: Users },
   { id: 'contenedores', label: 'Contenedores', icon: Box },
   { id: 'ubicaciones', label: 'Ubicaciones', icon: MapPin },
-  { id: 'ordenes-compra', label: 'Órdenes de Compra', icon: ShoppingCart },
-  { id: 'lotes-stock', label: 'Inventario', icon: ClipboardList },
-  { id: 'salidas', label: 'Salida de Mercancía', icon: LogOut },
+  { id: 'ordenes', label: 'Órdenes de Compra', icon: ShoppingCart },
+  { id: 'usuarios', label: 'Usuarios', icon: Users },
 ];
 
 export default TABS;
