@@ -16,7 +16,7 @@ import { TABS } from './constants/tabs';
 import { api } from './services/api';
 
 function App() {
-  const [user, setUser] = useState(null); // Estado de usuario
+  const [user, setUser] = useState({ name: 'Admin Temp', email: 'admin@temp.com', rol: 'Admin' }); // Bypass login: Estado de usuario inicializado
   const [activeTab, setActiveTab] = useState('productos');
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -99,11 +99,16 @@ function App() {
     return <Login onLogin={setUser} />;
   }
 
+  // Filtrar pestañas según el rol
+  const visibleTabs = user?.rol === 'Admin'
+    ? TABS
+    : TABS.filter(tab => tab.id !== 'usuarios');
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       <Header user={user} onLogout={() => setUser(null)} />
 
-      <Tabs tabs={TABS} activeTab={activeTab} onTabChange={setActiveTab} />
+      <Tabs tabs={visibleTabs} activeTab={activeTab} onTabChange={setActiveTab} />
 
       <main className="max-w-7xl mx-auto px-4 py-6">
         {error && <ErrorAlert error={error} />}
